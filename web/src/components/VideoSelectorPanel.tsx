@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { CircleAlert, CircleCheck, Clock, ListFilter, RefreshCw } from 'lucide-react'
 
 import { useSkyEyeStore } from '../store/useSkyEyeStore'
@@ -9,15 +10,18 @@ export function VideoSelectorPanel() {
   const toggleVideo = useSkyEyeStore((state) => state.toggleVideo)
   const loadVideos = useSkyEyeStore((state) => state.loadVideos)
 
+  const selectedCount = useMemo(() => selectedVideoIds.length, [selectedVideoIds])
+
   return (
     <section className="panel selector-panel">
       <div className="panel-head row-between">
         <div>
           <h2 className="panel-title">
             <ListFilter className="panel-icon" size={18} aria-hidden="true" />
-            2. 选择检索范围
+            视频列表
+            {selectedCount > 0 && <span className="selected-badge">{selectedCount}</span>}
           </h2>
-          <p>支持多选，建议优先选择处理完成的视频。</p>
+          <p>勾选视频以设置为搜索范围，支持多选。</p>
         </div>
         <button
           className="ghost-btn"

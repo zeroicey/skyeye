@@ -8,7 +8,6 @@ const quickExamples = ['person', '白色衬衫', '蓝色裤子', 'car']
 export function SearchPanel() {
   const query = useSkyEyeStore((state) => state.query)
   const searching = useSkyEyeStore((state) => state.searching)
-  const selectedCount = useSkyEyeStore((state) => state.selectedVideoIds.length)
   const errorMessage = useSkyEyeStore((state) => state.errorMessage)
   const setQuery = useSkyEyeStore((state) => state.setQuery)
   const search = useSkyEyeStore((state) => state.search)
@@ -25,9 +24,9 @@ export function SearchPanel() {
       <div className="panel-head">
         <h2 className="panel-title">
           <ScanSearch className="panel-icon" size={18} aria-hidden="true" />
-          3. 语义搜索
+          语义搜索
         </h2>
-        <p>当前已选择 {selectedCount} 个视频作为检索范围。</p>
+        <p>在已选视频中搜索目标与衣物属性。</p>
       </div>
 
       <label className="field-label" htmlFor="searchQuery">

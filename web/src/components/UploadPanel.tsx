@@ -38,7 +38,7 @@ export function UploadPanel() {
       <div className="panel-head">
         <h2 className="panel-title">
           <Upload className="panel-icon" size={18} aria-hidden="true" />
-          1. 上传视频
+          上传视频
         </h2>
         <p>上传后系统会自动抽帧并识别目标与衣物属性。</p>
       </div>

@@ -12,12 +12,15 @@ const wait = (ms: number) =>
 
 type StatusTone = 'info' | 'success' | 'error'
 
+export type TabType = 'upload' | 'search'
+
 export interface StatusMessage {
   tone: StatusTone
   text: string
 }
 
 interface SkyEyeStoreState {
+  activeTab: TabType
   videos: VideoItem[]
   selectedVideoIds: string[]
   query: string
@@ -28,6 +31,7 @@ interface SkyEyeStoreState {
   hasSearched: boolean
   uploadStatus: StatusMessage | null
   errorMessage: string | null
+  setActiveTab: (tab: TabType) => void
   setQuery: (query: string) => void
   toggleVideo: (videoId: string) => void
   loadVideos: () => Promise<void>
@@ -84,6 +88,7 @@ export const useSkyEyeStore = create<SkyEyeStoreState>()((set, get) => {
   }
 
   return {
+    activeTab: 'upload',
     videos: [],
     selectedVideoIds: [],
     query: '',
@@ -94,6 +99,10 @@ export const useSkyEyeStore = create<SkyEyeStoreState>()((set, get) => {
     hasSearched: false,
     uploadStatus: null,
     errorMessage: null,
+
+    setActiveTab: (tab) => {
+      set({ activeTab: tab })
+    },
 
     setQuery: (query) => {
       set({ query })
