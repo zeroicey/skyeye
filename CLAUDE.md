@@ -10,7 +10,7 @@ SkyEye is a video surveillance search system that uses YOLO for object detection
 
 ```bash
 # Run the FastAPI application
-python main.py
+python -m skyeye.main
 
 # Install dependencies with uv
 uv sync
@@ -52,7 +52,7 @@ services/         # Business logic layer
 ## Dependencies
 
 - FastAPI + uvicorn
-- Ultralytics YOLO (yolo26n.py model)
+- Ultralytics YOLO (yolo26n.pt model)
 - Transformers CLIP (openai/clip-vit-base-patch32)
 - OpenCV
 - PyTorch (CUDA)
@@ -61,5 +61,6 @@ services/         # Business logic layer
 ## Notes
 
 - Network proxy: If network errors occur, set `$env:HTTP_PROXY="http://127.0.0.1:7897"; $env:HTTPS_PROXY="http://127.0.0.1:7897"`
-- Models are loaded lazily on first use (YOLO: `yolo26n.py`, CLIP: `openai/clip-vit-base-patch32`)
+- Models are loaded lazily on first use (YOLO: `yolo26n.pt`, CLIP: `openai/clip-vit-base-patch32`)
 - Video and frame data stored in `data/videos/` and `data/frames/`
+- Use xcrawl skills to search

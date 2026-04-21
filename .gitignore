@@ -12,3 +12,25 @@ wheels/
 data/
 input/
 output/
+# Model Weights
+*.pt
+*.pth
+*.onnx
+
+# Databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Configuration
+.env
+.env.*
+!.env.example
+
