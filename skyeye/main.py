@@ -2,7 +2,6 @@
 import asyncio
 from pathlib import Path
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 
 from skyeye.db import get_db_connection, init_db
 from skyeye.api import videos_router, search_router
@@ -27,11 +26,15 @@ app.include_router(videos_router)
 app.include_router(search_router)
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def index():
-    """首页 - 返回前端页面"""
-    with open(Path(__file__).parent / "templates" / "index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    """服务健康检查"""
+    return {
+        "service": "SkyEye API",
+        "status": "ok",
+        "api_prefix": "/api",
+        "docs": "/docs"
+    }
 
 
 async def process_video_async(video_id: str, video_path: Path):
