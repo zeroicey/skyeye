@@ -3,6 +3,7 @@ import cv2
 import uuid
 import json
 from pathlib import Path
+from PIL import Image
 from ultralytics import YOLO
 from transformers import CLIPProcessor, CLIPModel
 import torch
@@ -20,7 +21,7 @@ MODEL = None
 CLIP_MODEL = None
 CLIP_PROCESSOR = None
 
-# Clothing categories to detect
+# Original clothing prompts (with "a person wearing" prefix)
 CLOTHING_PROMPTS = [
     "a person wearing a white shirt",
     "a person wearing a black shirt",
@@ -50,6 +51,9 @@ def get_model():
     if MODEL is None:
         print("Loading YOLO model...")
         MODEL = YOLO("yolo26n.pt")
+        # Move to GPU if available
+        if torch.cuda.is_available():
+            MODEL.to('cuda')
         print("YOLO model loaded!")
     return MODEL
 
@@ -58,9 +62,12 @@ def get_clip_model():
     """Get or load CLIP model for clothing detection."""
     global CLIP_MODEL, CLIP_PROCESSOR
     if CLIP_MODEL is None:
-        print("Loading CLIP model...")
+        print("Loading CLIP model (openai/clip-vit-base-patch32)...")
         CLIP_MODEL = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
         CLIP_PROCESSOR = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        if torch.cuda.is_available():
+            CLIP_MODEL.to('cuda')
+        CLIP_MODEL.eval()
         print("CLIP model loaded!")
     return CLIP_MODEL, CLIP_PROCESSOR
 
@@ -73,6 +80,10 @@ def detect_clothing(image_crop, prompts=None):
     model, processor = get_clip_model()
     image_rgb = cv2.cvtColor(image_crop, cv2.COLOR_BGR2RGB)
     inputs = processor(text=prompts, images=image_rgb, return_tensors="pt", padding=True)
+
+    # Move to GPU if available
+    device = next(model.parameters()).device
+    inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
 
     with torch.no_grad():
         outputs = model(**inputs)
