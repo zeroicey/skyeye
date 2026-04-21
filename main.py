@@ -4,13 +4,20 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from db import get_db_connection
+from db import get_db_connection, init_db
 from api import videos_router, search_router
 from services import VIDEOS_DIR, FRAMES_DIR, process_video
 
-# 确保目录存在
-VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
-FRAMES_DIR.mkdir(parents=True, exist_ok=True)
+
+def ensure_directories():
+    """Ensure required directories and database exist."""
+    VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+    FRAMES_DIR.mkdir(parents=True, exist_ok=True)
+    init_db()
+
+
+# Initialize directories and database before app starts
+ensure_directories()
 
 # 创建 FastAPI 应用
 app = FastAPI(title="SkyEye Video Search")
