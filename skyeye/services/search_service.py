@@ -149,6 +149,73 @@ def _deduplicate_results(results: list) -> list:
     return reduced
 
 
+def get_track_map(video_ids: list[str]) -> dict[tuple[str, int], dict]:
+    """Load stored per-track summary rows for the selected videos."""
+    if not video_ids:
+        return {}
+
+    placeholders = ",".join("?" * len(video_ids))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        SELECT video_id, track_id, best_frame_id, summary_json
+        FROM tracks
+        WHERE video_id IN ({placeholders})
+    """, video_ids)
+
+    track_map = {}
+    for row in cursor.fetchall():
+        track_map[(row["video_id"], row["track_id"])] = {
+            "best_frame_id": row["best_frame_id"],
+            "summary_json": row["summary_json"],
+        }
+
+    conn.close()
+    return track_map
+
+
+def split_tracked_results(results: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split matched results into tracked and untracked buckets."""
+    tracked = []
+    untracked = []
+
+    for result in results:
+        if result.get("track_id") is not None:
+            tracked.append(result)
+        else:
+            untracked.append(result)
+
+    return tracked, untracked
+
+
+def group_tracked_results(results: list[dict], track_map: dict[tuple[str, int], dict]) -> list[dict]:
+    """Return one representative frame result per tracked person."""
+    grouped = {}
+
+    for result in results:
+        key = (result["video_id"], result["track_id"])
+        grouped.setdefault(key, []).append(result)
+
+    selected = []
+    for key, items in grouped.items():
+        best_frame_id = track_map.get(key, {}).get("best_frame_id")
+        chosen = None
+
+        if best_frame_id:
+            for item in items:
+                if item["frame_id"] == best_frame_id:
+                    chosen = item
+                    break
+
+        if chosen is None:
+            chosen = max(items, key=lambda item: item.get("match_confidence", 0.0))
+
+        selected.append(chosen)
+
+    selected.sort(key=lambda item: (item["video_id"], item["timestamp"]))
+    return selected
+
+
 def detect_clothing_and_colors(query: str):
     """Detect clothing categories and colors from query."""
     clothing_cats = []
@@ -249,13 +316,35 @@ def search_frames(video_ids: list, query: str) -> list:
                 matched_detections.append(det)
 
         if matched:
-            results.append({
-                "frame_id": row["id"],
-                "video_id": row["video_id"],
-                "timestamp": round(row["timestamp"], 2),
-                "image_path": row["image_path"],
-                "detections": matched_detections
-            })
+            tracked_detections = [det for det in matched_detections if det.get("track_id") is not None]
+            untracked_detections = [det for det in matched_detections if det.get("track_id") is None]
+
+            for det in tracked_detections:
+                results.append({
+                    "frame_id": row["id"],
+                    "video_id": row["video_id"],
+                    "timestamp": round(row["timestamp"], 2),
+                    "image_path": row["image_path"],
+                    "detections": [det],
+                    "track_id": det["track_id"],
+                    "match_confidence": det.get("confidence", 0.0),
+                })
+
+            if untracked_detections:
+                results.append({
+                    "frame_id": row["id"],
+                    "video_id": row["video_id"],
+                    "timestamp": round(row["timestamp"], 2),
+                    "image_path": row["image_path"],
+                    "detections": untracked_detections,
+                    "track_id": None,
+                    "match_confidence": max(det.get("confidence", 0.0) for det in untracked_detections),
+                })
 
     conn.close()
-    return _deduplicate_results(results)
+    track_map = get_track_map(video_ids)
+    tracked_results, untracked_results = split_tracked_results(results)
+    final_results = group_tracked_results(tracked_results, track_map)
+    final_results.extend(_deduplicate_results(untracked_results))
+    final_results.sort(key=lambda item: (item["video_id"], item["timestamp"]))
+    return final_results
