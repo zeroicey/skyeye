@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Search, SearchX } from 'lucide-react'
 
 import { useSkyEyeStore } from '../store/useSkyEyeStore'
-import type { SearchResult } from '../types'
 import { ResultCard } from './ResultCard'
 import { ResultPreviewModal } from './ResultPreviewModal'
 
@@ -11,11 +10,33 @@ export function SearchResultsPanel() {
   const results = useSkyEyeStore((state) => state.results)
   const hasSearched = useSkyEyeStore((state) => state.hasSearched)
   const searching = useSkyEyeStore((state) => state.searching)
-  const [previewResult, setPreviewResult] = useState<SearchResult | null>(null)
+  const [previewFrameId, setPreviewFrameId] = useState<string | null>(null)
 
   const videoNameMap = useMemo(() => {
     return new Map(videos.map((video) => [video.id, video.name]))
   }, [videos])
+
+  const previewResult = useMemo(() => {
+    if (!previewFrameId) {
+      return null
+    }
+
+    return results.find((result) => result.frame_id === previewFrameId) ?? null
+  }, [previewFrameId, results])
+
+  useEffect(() => {
+    if (!previewFrameId || previewResult) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setPreviewFrameId((currentFrameId) => (currentFrameId === previewFrameId ? null : currentFrameId))
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [previewFrameId, previewResult])
 
   return (
     <section className="panel results-panel">
@@ -53,7 +74,7 @@ export function SearchResultsPanel() {
               key={result.frame_id}
               result={result}
               videoName={videoNameMap.get(result.video_id) ?? result.video_id}
-              onPreview={setPreviewResult}
+              onPreview={(selectedResult) => setPreviewFrameId(selectedResult.frame_id)}
             />
           ))}
         </div>
@@ -62,7 +83,7 @@ export function SearchResultsPanel() {
       <ResultPreviewModal
         result={previewResult}
         videoName={previewResult ? videoNameMap.get(previewResult.video_id) ?? previewResult.video_id : ''}
-        onClose={() => setPreviewResult(null)}
+        onClose={() => setPreviewFrameId(null)}
       />
     </section>
   )

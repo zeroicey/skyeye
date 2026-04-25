@@ -34,6 +34,24 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
     }
   }, [result])
 
+  useEffect(() => {
+    if (!result) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose, result])
+
   if (!result) {
     return null
   }
@@ -44,6 +62,11 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
   return (
     <div
       role="presentation"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose()
+        }
+      }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -58,6 +81,7 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
       <div
         role="dialog"
         aria-labelledby="result-preview-title"
+        aria-modal="true"
         style={{
           width: 'min(960px, 100%)',
           maxHeight: 'min(88vh, 900px)',
