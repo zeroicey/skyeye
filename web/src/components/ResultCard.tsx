@@ -6,18 +6,25 @@ import type { SearchResult } from '../types'
 interface ResultCardProps {
   result: SearchResult
   videoName: string
+  onPreview: (result: SearchResult) => void
 }
 
 const normalizePrompt = (prompt: string) => prompt.replace(/^a person wearing\s+/i, '')
 
 const formatConfidence = (value: number) => `${Math.round(value * 100)}%`
 
-export function ResultCard({ result, videoName }: ResultCardProps) {
+export function ResultCard({ result, videoName, onPreview }: ResultCardProps) {
   const detectionIndices = result.detections.map((_, index) => index)
   const imageUrl = buildAnnotatedFrameUrl(result.frame_id, detectionIndices)
 
   return (
-    <article className="result-card">
+    <button
+      type="button"
+      className="result-card"
+      onClick={() => onPreview(result)}
+      aria-label={`查看 ${videoName} 在 ${result.timestamp.toFixed(2)} 秒的检测结果`}
+      style={{ padding: 0, textAlign: 'left' }}
+    >
       <img className="frame-preview" src={imageUrl} alt={`Frame ${result.frame_id}`} loading="lazy" />
 
       <div className="result-info">
@@ -50,6 +57,6 @@ export function ResultCard({ result, videoName }: ResultCardProps) {
           ))}
         </div>
       </div>
-    </article>
+    </button>
   )
 }
