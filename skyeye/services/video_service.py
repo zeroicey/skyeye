@@ -3,15 +3,14 @@ import cv2
 import uuid
 import json
 from pathlib import Path
-from PIL import Image
 from ultralytics import YOLO
 from transformers import CLIPProcessor, CLIPModel
 import torch
+from skyeye.paths import get_frames_dir, get_videos_dir
 
 # Create data directories
-DATA_DIR = Path(__file__).parent.parent / "data"
-VIDEOS_DIR = DATA_DIR / "videos"
-FRAMES_DIR = DATA_DIR / "frames"
+VIDEOS_DIR = get_videos_dir()
+FRAMES_DIR = get_frames_dir()
 
 VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
 FRAMES_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,13 +1,12 @@
 """图像标注服务"""
 import cv2
-import json
 from pathlib import Path
 from fastapi import HTTPException
+from skyeye.paths import get_frames_dir
 
 
 # 确保FRAMES_DIR路径正确
-DATA_DIR = Path(__file__).parent.parent / "data"
-FRAMES_DIR = DATA_DIR / "frames"
+FRAMES_DIR = get_frames_dir()
 FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 
 
