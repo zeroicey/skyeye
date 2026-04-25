@@ -10,6 +10,21 @@ FRAMES_DIR = get_frames_dir()
 FRAMES_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def format_detection_label(det: dict) -> str:
+    """Build a display label for one detection."""
+    label = det.get("class", "unknown")
+    clothing = det.get("clothing", [])
+    if clothing:
+        label = f"{label}: {clothing[0]['prompt']}"
+
+    track_id = det.get("track_id")
+    if track_id is not None:
+        label = f"{label} ID:{track_id}"
+
+    conf = det.get("confidence", 0)
+    return f"{label} {conf:.2f}"
+
+
 def annotate_frame(image_path: str, detections: list, highlight_indices: set = None) -> str:
     """为图片绘制边界框并返回标注后的图片路径
 
@@ -36,12 +51,7 @@ def annotate_frame(image_path: str, detections: list, highlight_indices: set = N
             thickness = 3 if i in highlight_indices else 2
             cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
 
-            label = det.get("class", "unknown")
-            conf = det.get("confidence", 0)
-            clothing = det.get("clothing", [])
-            if clothing:
-                label = f"{label}: {clothing[0]['prompt']}"
-            label_text = f"{label} {conf:.2f}"
+            label_text = format_detection_label(det)
             cv2.putText(img, label_text, (x1, y1 - 10),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
