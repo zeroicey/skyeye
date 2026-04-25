@@ -27,21 +27,21 @@ export function ResultCard({ result, videoName, onPreview }: ResultCardProps) {
     >
       <img className="frame-preview" src={imageUrl} alt={`Frame ${result.frame_id}`} loading="lazy" />
 
-      <div className="result-info">
-        <div className="result-headline">
-          <h3 className="result-title">
+      <span className="result-info">
+        <span className="result-headline">
+          <span className="result-title">
             <Video size={14} aria-hidden="true" />
             {videoName}
-          </h3>
-          <p className="time-chip">
+          </span>
+          <span className="time-chip">
             <Clock size={13} aria-hidden="true" />
             {result.timestamp.toFixed(2)}s
-          </p>
-        </div>
+          </span>
+        </span>
 
-        <div className="result-tags">
+        <span className="result-tags">
           {result.detections.map((detection, detectionIndex) => (
-            <div className="tag-group" key={`${result.frame_id}-${detection.class}-${detectionIndex}`}>
+            <span className="tag-group" key={`${result.frame_id}-${detection.class}-${detectionIndex}`}>
               <span className="tag detection">
                 {detection.class} {formatConfidence(detection.confidence)}
               </span>
@@ -53,10 +53,10 @@ export function ResultCard({ result, videoName, onPreview }: ResultCardProps) {
                   {normalizePrompt(clothing.prompt)} {formatConfidence(clothing.confidence)}
                 </span>
               ))}
-            </div>
+            </span>
           ))}
-        </div>
-      </div>
+        </span>
+      </span>
     </button>
   )
 }

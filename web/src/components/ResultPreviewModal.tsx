@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Clock, Video, X } from 'lucide-react'
 
 import { buildAnnotatedFrameUrl } from '../lib/api'
@@ -14,6 +15,25 @@ const normalizePrompt = (prompt: string) => prompt.replace(/^a person wearing\s+
 const formatConfidence = (value: number) => `${Math.round(value * 100)}%`
 
 export function ResultPreviewModal({ result, videoName, onClose }: ResultPreviewModalProps) {
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (!result) {
+      return
+    }
+
+    const activeElement = document.activeElement
+    previousFocusRef.current = activeElement instanceof HTMLElement ? activeElement : null
+    closeButtonRef.current?.focus()
+
+    return () => {
+      if (previousFocusRef.current?.isConnected) {
+        previousFocusRef.current.focus()
+      }
+    }
+  }, [result])
+
   if (!result) {
     return null
   }
@@ -55,7 +75,13 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
               <p>{videoName}</p>
             </div>
 
-            <button type="button" className="ghost-btn" onClick={onClose} aria-label="关闭预览">
+            <button
+              ref={closeButtonRef}
+              type="button"
+              className="ghost-btn"
+              onClick={onClose}
+              aria-label="关闭预览"
+            >
               <span className="btn-content">
                 <X size={16} aria-hidden="true" />
                 关闭
