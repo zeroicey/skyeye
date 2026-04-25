@@ -14,7 +14,22 @@ const normalizePrompt = (prompt: string) => prompt.replace(/^a person wearing\s+
 
 const formatConfidence = (value: number) => `${Math.round(value * 100)}%`
 
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled])',
+  '[href]',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
+const getFocusableElements = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) => !element.hasAttribute('disabled') && element.getClientRects().length > 0,
+  )
+
 export function ResultPreviewModal({ result, videoName, onClose }: ResultPreviewModalProps) {
+  const dialogRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
@@ -25,30 +40,64 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
 
     const activeElement = document.activeElement
     previousFocusRef.current = activeElement instanceof HTMLElement ? activeElement : null
-    closeButtonRef.current?.focus()
 
-    return () => {
-      if (previousFocusRef.current?.isConnected) {
-        previousFocusRef.current.focus()
-      }
-    }
-  }, [result])
-
-  useEffect(() => {
-    if (!result) {
-      return
-    }
+    const focusInitialTarget = window.requestAnimationFrame(() => {
+      const initialFocusTarget = closeButtonRef.current ?? dialogRef.current
+      initialFocusTarget?.focus()
+    })
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault()
         onClose()
+        return
+      }
+
+      if (event.key !== 'Tab') {
+        return
+      }
+
+      const dialog = dialogRef.current
+      if (!dialog) {
+        return
+      }
+
+      const focusableElements = getFocusableElements(dialog)
+      if (focusableElements.length === 0) {
+        event.preventDefault()
+        dialog.focus()
+        return
+      }
+
+      const firstFocusable = focusableElements[0]
+      const lastFocusable = focusableElements[focusableElements.length - 1]
+      const activeFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      const focusIsInsideDialog = activeFocus ? dialog.contains(activeFocus) : false
+
+      if (event.shiftKey) {
+        if (!focusIsInsideDialog || activeFocus === firstFocusable) {
+          event.preventDefault()
+          lastFocusable.focus()
+        }
+
+        return
+      }
+
+      if (!focusIsInsideDialog || activeFocus === lastFocusable) {
+        event.preventDefault()
+        firstFocusable.focus()
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
+      window.cancelAnimationFrame(focusInitialTarget)
+      document.removeEventListener('keydown', handleKeyDown)
+
+      if (previousFocusRef.current?.isConnected) {
+        previousFocusRef.current.focus()
+      }
     }
   }, [onClose, result])
 
@@ -79,8 +128,11 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="result-preview-title"
+        tabIndex={-1}
         style={{
           width: 'min(960px, 100%)',
           maxHeight: 'min(88vh, 900px)',

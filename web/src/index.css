@@ -626,6 +626,7 @@ body {
 }
 
 .result-info {
+	display: block;
 	padding: 12px;
 }
 
@@ -634,16 +635,13 @@ body {
 	justify-content: space-between;
 	align-items: flex-start;
 	gap: 8px;
+	min-width: 0;
 }
 
-.result-headline h3 {
+.result-card .result-title {
 	margin: 0;
-	font-size: 0.94rem;
-	line-height: 1.4;
-	max-width: 72%;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	min-width: 0;
+	flex: 1 1 auto;
 }
 
 .result-title {
@@ -652,13 +650,27 @@ body {
 	gap: 6px;
 }
 
+.result-card .result-title {
+	font-size: 0.94rem;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.result-card .result-title svg {
+	flex-shrink: 0;
+}
+
 .time-chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
+	flex-shrink: 0;
+	white-space: nowrap;
 }
 
-.result-headline p {
+.result-card .time-chip {
 	margin: 0;
 	color: var(--text-muted);
 	font-size: 0.8rem;
