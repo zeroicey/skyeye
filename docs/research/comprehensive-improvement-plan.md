@@ -158,7 +158,7 @@ def rgb_to_color_name(rgb):
 
 ### Week 1: 基础优化
 
-- [ ] 替换 YOLO 模型为 yolov8s.pt
+- [ ] 替换 YOLO 模型为 yolo11s.pt 或 yolov12s.pt (性能优于 yolo26n)
 - [ ] 扩展 CLOTHING_PROMPTS 到 50+
 - [ ] 调整检测阈值和服装阈值
 - [ ] 添加图像增强预处理
@@ -192,7 +192,7 @@ def rgb_to_color_name(rgb):
 
 | 模块 | 当前 | 推荐 | 理由 |
 |------|------|------|------|
-| **检测模型** | yolo26n | yolov8s | +9% mAP，速度可接受 |
+| **检测模型** | yolo26n (2026新版本) | yolo11s/yolov12s | 新版本性能更优 |
 | **追踪** | 无 | ByteTrack | SOTA 方案 |
 | **服装识别** | CLIP 20 prompts | CLIP 50+ prompts + 颜色提取 | 覆盖更广 |
 | **属性识别** | 无 | OpenPAR | 专用模型 |
