@@ -81,7 +81,6 @@ export function ResultPreviewModal({ result, videoName, onClose }: ResultPreview
       <div
         role="dialog"
         aria-labelledby="result-preview-title"
-        aria-modal="true"
         style={{
           width: 'min(960px, 100%)',
           maxHeight: 'min(88vh, 900px)',
