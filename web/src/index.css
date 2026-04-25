@@ -698,17 +698,17 @@ body {
 	color: #216f51;
 }
 
-[role='presentation'] {
+div:has(> div > section.panel #result-preview-title) {
 	backdrop-filter: blur(10px);
 	animation: fade-in 0.2s ease;
 }
 
-[role='dialog'][aria-labelledby='result-preview-title'] {
+div:has(> section.panel #result-preview-title) {
 	border-radius: 24px;
 	animation: rise-in 0.24s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-[role='dialog'][aria-labelledby='result-preview-title'] > .panel {
+section.panel:has(#result-preview-title) {
 	border-color: rgba(211, 226, 235, 0.92);
 	background:
 		linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 251, 253, 0.96)),
@@ -718,7 +718,16 @@ body {
 		inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
-[role='dialog'][aria-labelledby='result-preview-title'] img {
+section.panel:has(#result-preview-title) .panel-head p {
+	max-width: min(100%, 52rem);
+	overflow-wrap: anywhere;
+}
+
+section.panel:has(#result-preview-title) .ghost-btn {
+	flex-shrink: 0;
+}
+
+section.panel:has(#result-preview-title) img {
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.6),
 		0 16px 34px rgba(16, 42, 58, 0.1);
@@ -851,42 +860,40 @@ body {
 	}
 
 	.result-card::after {
-		top: auto;
+		top: 10px;
 		right: 10px;
-		bottom: 10px;
 		font-size: 0.68rem;
 		padding: 5px 9px;
 	}
 
-	[role='presentation'] {
+	div:has(> div > section.panel #result-preview-title) {
 		padding: 12px !important;
 		align-items: flex-end !important;
 	}
 
-	[role='dialog'][aria-labelledby='result-preview-title'] {
+	div:has(> section.panel #result-preview-title) {
 		width: 100% !important;
 		max-height: min(92vh, 920px) !important;
 	}
 
-	[role='dialog'][aria-labelledby='result-preview-title'] > .panel {
+	section.panel:has(#result-preview-title) {
 		border-radius: 18px;
 	}
 
-	[role='dialog'][aria-labelledby='result-preview-title'] .row-between {
-		flex-direction: row;
-		align-items: flex-start;
+	section.panel:has(#result-preview-title) .row-between {
+		align-items: stretch;
 	}
 
-	[role='dialog'][aria-labelledby='result-preview-title'] img {
+	section.panel:has(#result-preview-title) .ghost-btn {
+		align-self: flex-start;
+	}
+
+	section.panel:has(#result-preview-title) img {
 		max-height: 42vh !important;
 	}
 
-	[role='dialog'][aria-labelledby='result-preview-title'] .result-headline {
+	section.panel:has(#result-preview-title) .result-headline {
 		flex-direction: column;
 		align-items: flex-start;
-	}
-
-	[role='dialog'][aria-labelledby='result-preview-title'] .ghost-btn {
-		flex-shrink: 0;
 	}
 }
