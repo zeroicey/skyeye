@@ -547,16 +547,74 @@ body {
 }
 
 .result-card {
+	position: relative;
+	isolation: isolate;
+	display: block;
+	width: 100%;
 	border: 1px solid var(--border);
 	border-radius: 14px;
 	overflow: hidden;
 	background: #fff;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	appearance: none;
+	cursor: zoom-in;
+	box-shadow:
+		0 14px 30px rgba(16, 42, 58, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.78);
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease,
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.result-card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(16, 42, 58, 0), rgba(16, 42, 58, 0.08));
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	pointer-events: none;
+}
+
+.result-card::after {
+	content: '点击预览';
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.58);
+	background: rgba(16, 42, 58, 0.55);
+	backdrop-filter: blur(14px);
+	color: #fff;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	box-shadow: 0 10px 24px rgba(16, 42, 58, 0.14);
+	pointer-events: none;
 }
 
 .result-card:hover {
 	transform: translateY(-4px);
-	box-shadow: 0 12px 30px rgba(16, 42, 58, 0.15);
+	border-color: rgba(29, 138, 164, 0.38);
+	box-shadow:
+		0 22px 42px rgba(16, 42, 58, 0.14),
+		0 0 0 1px rgba(29, 138, 164, 0.08);
+}
+
+.result-card:hover::before,
+.result-card:focus-visible::before {
+	opacity: 1;
+}
+
+.result-card:focus-visible {
+	outline: none;
+	transform: translateY(-2px);
+	border-color: rgba(29, 138, 164, 0.58);
+	box-shadow:
+		0 18px 34px rgba(16, 42, 58, 0.14),
+		0 0 0 4px rgba(29, 138, 164, 0.18);
 }
 
 .frame-preview {
@@ -640,6 +698,32 @@ body {
 	color: #216f51;
 }
 
+[role='presentation'] {
+	backdrop-filter: blur(10px);
+	animation: fade-in 0.2s ease;
+}
+
+[role='dialog'][aria-labelledby='result-preview-title'] {
+	border-radius: 24px;
+	animation: rise-in 0.24s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+[role='dialog'][aria-labelledby='result-preview-title'] > .panel {
+	border-color: rgba(211, 226, 235, 0.92);
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 251, 253, 0.96)),
+		var(--surface);
+	box-shadow:
+		0 28px 70px rgba(16, 42, 58, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+[role='dialog'][aria-labelledby='result-preview-title'] img {
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.6),
+		0 16px 34px rgba(16, 42, 58, 0.1);
+}
+
 .empty-state {
 	border: 1px dashed var(--border);
 	border-radius: 14px;
@@ -714,6 +798,16 @@ body {
 	}
 }
 
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
 @media (max-width: 1100px) {
 	.page-header {
 		flex-direction: column;
@@ -754,5 +848,45 @@ body {
 	.frame-preview,
 	.skeleton-image {
 		height: 174px;
+	}
+
+	.result-card::after {
+		top: auto;
+		right: 10px;
+		bottom: 10px;
+		font-size: 0.68rem;
+		padding: 5px 9px;
+	}
+
+	[role='presentation'] {
+		padding: 12px !important;
+		align-items: flex-end !important;
+	}
+
+	[role='dialog'][aria-labelledby='result-preview-title'] {
+		width: 100% !important;
+		max-height: min(92vh, 920px) !important;
+	}
+
+	[role='dialog'][aria-labelledby='result-preview-title'] > .panel {
+		border-radius: 18px;
+	}
+
+	[role='dialog'][aria-labelledby='result-preview-title'] .row-between {
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	[role='dialog'][aria-labelledby='result-preview-title'] img {
+		max-height: 42vh !important;
+	}
+
+	[role='dialog'][aria-labelledby='result-preview-title'] .result-headline {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	[role='dialog'][aria-labelledby='result-preview-title'] .ghost-btn {
+		flex-shrink: 0;
 	}
 }
