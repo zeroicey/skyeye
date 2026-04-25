@@ -6,42 +6,35 @@ import type { SearchResult } from '../types'
 interface ResultCardProps {
   result: SearchResult
   videoName: string
-  onPreview: (result: SearchResult) => void
 }
 
 const normalizePrompt = (prompt: string) => prompt.replace(/^a person wearing\s+/i, '')
 
 const formatConfidence = (value: number) => `${Math.round(value * 100)}%`
 
-export function ResultCard({ result, videoName, onPreview }: ResultCardProps) {
+export function ResultCard({ result, videoName }: ResultCardProps) {
   const detectionIndices = result.detections.map((_, index) => index)
   const imageUrl = buildAnnotatedFrameUrl(result.frame_id, detectionIndices)
 
   return (
-    <button
-      type="button"
-      className="result-card"
-      onClick={() => onPreview(result)}
-      aria-label={`查看 ${videoName} 在 ${result.timestamp.toFixed(2)} 秒的检测结果`}
-      style={{ padding: 0, textAlign: 'left' }}
-    >
+    <article className="result-card">
       <img className="frame-preview" src={imageUrl} alt={`Frame ${result.frame_id}`} loading="lazy" />
 
-      <span className="result-info">
-        <span className="result-headline">
-          <span className="result-title">
+      <div className="result-info">
+        <div className="result-headline">
+          <h3 className="result-title">
             <Video size={14} aria-hidden="true" />
             {videoName}
-          </span>
-          <span className="time-chip">
+          </h3>
+          <p className="time-chip">
             <Clock size={13} aria-hidden="true" />
             {result.timestamp.toFixed(2)}s
-          </span>
-        </span>
+          </p>
+        </div>
 
-        <span className="result-tags">
+        <div className="result-tags">
           {result.detections.map((detection, detectionIndex) => (
-            <span className="tag-group" key={`${result.frame_id}-${detection.class}-${detectionIndex}`}>
+            <div className="tag-group" key={`${result.frame_id}-${detection.class}-${detectionIndex}`}>
               <span className="tag detection">
                 {detection.class} {formatConfidence(detection.confidence)}
               </span>
@@ -53,10 +46,10 @@ export function ResultCard({ result, videoName, onPreview }: ResultCardProps) {
                   {normalizePrompt(clothing.prompt)} {formatConfidence(clothing.confidence)}
                 </span>
               ))}
-            </span>
+            </div>
           ))}
-        </span>
-      </span>
-    </button>
+        </div>
+      </div>
+    </article>
   )
 }
