@@ -6,7 +6,10 @@ from pathlib import Path
 from ultralytics import YOLO
 from transformers import CLIPProcessor, CLIPModel
 import torch
-from skyeye.paths import get_frames_dir, get_videos_dir
+from skyeye.paths import get_data_dir, get_frames_dir, get_videos_dir
+from skyeye.pipeline import blur_score, build_person_images, score_observation
+from skyeye.repositories import PersonRepository
+from skyeye.storage import LocalObjectStore
 
 # Create data directories
 VIDEOS_DIR = get_videos_dir()
@@ -113,6 +116,74 @@ def build_track_rows(video_id: str, summaries: dict) -> list[dict]:
     return rows
 
 
+def persist_person_observation(
+    repo,
+    object_store,
+    best_scores: dict,
+    video_id: str,
+    frame_id: str,
+    frame,
+    timestamp: float,
+    detection: dict,
+) -> str | None:
+    """Persist crop/context artifacts and normalized person observation data."""
+    track_id = detection.get("track_id")
+    if track_id is None:
+        return None
+
+    bbox = detection.get("bbox", [])
+    if len(bbox) < 4:
+        return None
+
+    person_track_id = repo.upsert_person_track(
+        video_id=video_id,
+        track_id=track_id,
+        start_timestamp=timestamp,
+        end_timestamp=timestamp,
+        summary={
+            "class": detection.get("class", "person"),
+            "clothing": detection.get("clothing", []),
+        },
+    )
+
+    observation_id = str(uuid.uuid4())
+    person_images = build_person_images(frame, bbox)
+    crop_key = f"persons/{video_id}/{person_track_id}/crops/{observation_id}.jpg"
+    context_key = f"persons/{video_id}/{person_track_id}/contexts/{observation_id}.jpg"
+    crop_uri = object_store.put_bytes(crop_key, person_images.crop_jpeg, "image/jpeg")
+    context_uri = object_store.put_bytes(context_key, person_images.context_jpeg, "image/jpeg")
+
+    quality_score = score_observation(
+        frame_shape=frame.shape,
+        bbox=bbox,
+        confidence=float(detection.get("confidence", 0.0)),
+        blur_score=blur_score(frame),
+    )
+    current_best = best_scores.get(person_track_id, -1.0)
+    is_representative = quality_score >= current_best
+
+    saved_observation_id = repo.insert_observation(
+        person_track_id=person_track_id,
+        frame_id=frame_id,
+        video_id=video_id,
+        track_id=track_id,
+        timestamp=timestamp,
+        bbox=bbox,
+        confidence=float(detection.get("confidence", 0.0)),
+        crop_uri=crop_uri,
+        context_uri=context_uri,
+        quality_score=quality_score,
+        is_representative=is_representative,
+        observation_id=observation_id,
+    )
+
+    if is_representative:
+        best_scores[person_track_id] = quality_score
+        repo.set_best_observation(person_track_id, saved_observation_id, quality_score)
+
+    return saved_observation_id
+
+
 def reset_tracker_state(model) -> None:
     """Reset persisted tracker state before processing a new video."""
     predictor = getattr(model, "predictor", None)
@@ -213,6 +284,9 @@ def process_video(video_id: str, video_path: Path) -> dict:
     frame_count = 0
     saved_count = 0
     track_summaries = {}
+    person_best_scores = {}
+    person_repo = PersonRepository()
+    object_store = LocalObjectStore(get_data_dir())
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -293,7 +367,24 @@ def process_video(video_id: str, video_path: Path) -> dict:
                 INSERT INTO frames (id, video_id, frame_index, timestamp, image_path, detections_json)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (frame_id, video_id, frame_count, timestamp, str(frame_path), json.dumps(detections)))
+            conn.commit()
             saved_count += 1
+
+            for detection in detections:
+                if detection.get("class") == "person" and detection.get("track_id") is not None:
+                    try:
+                        persist_person_observation(
+                            repo=person_repo,
+                            object_store=object_store,
+                            best_scores=person_best_scores,
+                            video_id=video_id,
+                            frame_id=frame_id,
+                            frame=frame,
+                            timestamp=timestamp,
+                            detection=detection,
+                        )
+                    except Exception as e:
+                        print(f"Person observation persistence error: {e}")
 
         frame_count += 1
 

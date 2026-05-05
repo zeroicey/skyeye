@@ -34,6 +34,38 @@ class DbPathTests(unittest.TestCase):
 
                 conn.close()
 
+    def test_init_db_creates_person_centric_v2_tables(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_db = Path(tmpdir) / "skyeye.db"
+            with patch.object(db_module, "get_db_path", return_value=temp_db):
+                db_module.init_db()
+
+                conn = sqlite3.connect(temp_db)
+                try:
+                    cursor = conn.cursor()
+
+                    for table_name in [
+                        "person_tracks",
+                        "track_observations",
+                        "track_representatives",
+                        "person_features",
+                    ]:
+                        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+                        row = cursor.fetchone()
+                        self.assertIsNotNone(row)
+                        self.assertEqual(row[0], table_name)
+
+                    cursor.execute("PRAGMA index_list('person_tracks')")
+                    person_track_indexes = {row[1] for row in cursor.fetchall()}
+                    self.assertIn("idx_person_tracks_video_track", person_track_indexes)
+
+                    cursor.execute("PRAGMA index_list('track_observations')")
+                    observation_indexes = {row[1] for row in cursor.fetchall()}
+                    self.assertIn("idx_track_observations_person_time", observation_indexes)
+                    self.assertIn("idx_track_observations_video_track", observation_indexes)
+                finally:
+                    conn.close()
+
 
 if __name__ == "__main__":
     unittest.main()

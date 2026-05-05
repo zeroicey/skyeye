@@ -1,9 +1,39 @@
 import unittest
 
-from skyeye.services.search_service import group_tracked_results
+from skyeye.services.search_service import enrich_person_results, group_tracked_results
 
 
 class SearchServiceTrackTests(unittest.TestCase):
+    def test_enrich_person_results_adds_person_centric_fields(self):
+        results = [
+            {
+                "frame_id": "frame-1",
+                "video_id": "video-1",
+                "timestamp": 1.0,
+                "track_id": 7,
+                "match_confidence": 0.91,
+                "detections": [{"class": "person", "confidence": 0.91, "bbox": [1, 2, 3, 4], "track_id": 7}],
+            }
+        ]
+        person_index = {
+            ("video-1", 7): {
+                "person_track_id": "person-7",
+                "start_timestamp": 0.5,
+                "end_timestamp": 3.0,
+                "crop_uri": "local://persons/video-1/person-7/crops/best.jpg",
+                "context_uri": "local://persons/video-1/person-7/contexts/best.jpg",
+                "summary": {"class": "person"},
+            }
+        }
+
+        enriched = enrich_person_results(results, person_index)
+
+        self.assertEqual(enriched[0]["person_track_id"], "person-7")
+        self.assertEqual(enriched[0]["crop_uri"], "local://persons/video-1/person-7/crops/best.jpg")
+        self.assertEqual(enriched[0]["context_uri"], "local://persons/video-1/person-7/contexts/best.jpg")
+        self.assertEqual(enriched[0]["start_timestamp"], 0.5)
+        self.assertEqual(enriched[0]["end_timestamp"], 3.0)
+
     def test_group_tracked_results_returns_one_result_per_track(self):
         results = [
             {

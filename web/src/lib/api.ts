@@ -45,3 +45,8 @@ export const buildAnnotatedFrameUrl = (frameId: string, detectionIndices: number
   const suffix = params.toString()
   return `${apiBaseUrl}frames/${frameId}/annotated${suffix ? `?${suffix}` : ''}`
 }
+
+export const buildPersonImageUrl = (uri: string) => {
+  const params = new URLSearchParams({ uri })
+  return `${apiBaseUrl}persons/image?${params.toString()}`
+}

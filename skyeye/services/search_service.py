@@ -1,6 +1,7 @@
 """搜索服务"""
 import json
 from skyeye.db import get_db_connection
+from skyeye.repositories import PersonRepository
 
 
 # Result deduplication settings
@@ -216,6 +217,26 @@ def group_tracked_results(results: list[dict], track_map: dict[tuple[str, int], 
     return selected
 
 
+def enrich_person_results(results: list[dict], person_index: dict[tuple[str, int], dict]) -> list[dict]:
+    """Attach person-centric V2.1 fields to tracked search results."""
+    enriched = []
+    for result in results:
+        item = dict(result)
+        track_id = item.get("track_id")
+        person = person_index.get((item["video_id"], track_id)) if track_id is not None else None
+        if person:
+            item.update({
+                "person_track_id": person["person_track_id"],
+                "crop_uri": person.get("crop_uri"),
+                "context_uri": person.get("context_uri"),
+                "start_timestamp": person.get("start_timestamp"),
+                "end_timestamp": person.get("end_timestamp"),
+                "features": person.get("summary", {}),
+            })
+        enriched.append(item)
+    return enriched
+
+
 def detect_clothing_and_colors(query: str):
     """Detect clothing categories and colors from query."""
     clothing_cats = []
@@ -343,8 +364,9 @@ def search_frames(video_ids: list, query: str) -> list:
 
     conn.close()
     track_map = get_track_map(video_ids)
+    person_index = PersonRepository().get_person_search_index(video_ids)
     tracked_results, untracked_results = split_tracked_results(results)
-    final_results = group_tracked_results(tracked_results, track_map)
+    final_results = enrich_person_results(group_tracked_results(tracked_results, track_map), person_index)
     final_results.extend(_deduplicate_results(untracked_results))
     final_results.sort(key=lambda item: (item["video_id"], item["timestamp"]))
     return final_results

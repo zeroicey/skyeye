@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from skyeye.db import get_db_connection, init_db
-from skyeye.api import videos_router, search_router
+from skyeye.api import persons_router, search_router, videos_router
 from skyeye.services import VIDEOS_DIR, FRAMES_DIR, process_video
 
 
@@ -24,6 +24,7 @@ app = FastAPI(title="SkyEye Video Search")
 # 注册路由
 app.include_router(videos_router)
 app.include_router(search_router)
+app.include_router(persons_router)
 
 
 @app.get("/")

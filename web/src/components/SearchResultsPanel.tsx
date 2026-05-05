@@ -47,7 +47,7 @@ export function SearchResultsPanel() {
         <div className="results-grid">
           {results.map((result) => (
             <ResultCard
-              key={result.frame_id}
+              key={result.person_track_id ?? result.frame_id}
               result={result}
               videoName={videoNameMap.get(result.video_id) ?? result.video_id}
             />

@@ -17,7 +17,15 @@ export interface Detection {
   class: string
   confidence: number
   bbox?: number[]
+  track_id?: number
   clothing?: ClothingMatch[]
+}
+
+export interface GalleryPreviewItem {
+  id: string
+  timestamp: number
+  crop_uri?: string | null
+  context_uri?: string | null
 }
 
 export interface SearchResult {
@@ -26,6 +34,14 @@ export interface SearchResult {
   timestamp: number
   image_path: string
   detections: Detection[]
+  track_id?: number | null
+  person_track_id?: string
+  crop_uri?: string | null
+  context_uri?: string | null
+  gallery_preview?: GalleryPreviewItem[]
+  features?: Record<string, unknown>
+  start_timestamp?: number
+  end_timestamp?: number
 }
 
 export interface SearchPayload {
